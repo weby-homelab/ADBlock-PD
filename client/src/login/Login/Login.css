@@ -21,9 +21,25 @@
 
 .login__form {
     margin: auto;
-    padding: 40px 15px 100px;
+    padding: 2.5rem 2rem;
     width: 100%;
-    max-width: 24rem;
+    max-width: 26rem;
+    background: var(--card-bgcolor);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(20px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-theme='dark'] .login__form {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    background: rgba(16, 22, 40, 0.65);
+}
+
+.login__form:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(59, 130, 246, 0.15);
 }
 
 .login__info {

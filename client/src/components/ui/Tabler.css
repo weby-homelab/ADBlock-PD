@@ -11,38 +11,38 @@ Dashboard UI
  */
 /* stylelint-disable */
 :root {
-    --blue: #467fcf;
-    --indigo: #6574cd;
-    --purple: #a55eea;
-    --pink: #f66d9b;
-    --red: #cd201f;
-    --orange: #fd9644;
-    --yellow: #f1c40f;
-    --green: #5eba00;
-    --green-74: #66b574;
-    --green-86: #66b586;
-    --teal: #2bcbba;
-    --cyan: #17a2b8;
+    --blue: #3b82f6;
+    --indigo: #4f46e5;
+    --purple: #8b5cf6;
+    --pink: #f43f5e;
+    --red: #ef4444;
+    --orange: #f97316;
+    --yellow: #eab308;
+    --green: #10b981;
+    --green-74: #34d399;
+    --green-86: #059669;
+    --teal: #14b8a6;
+    --cyan: #06b6d4;
     --white: #fff;
-    --gray: #868e96;
-    --gray-ac: #9aa0ac;
-    --gray-dark: #343a40;
-    --azure: #45aaf2;
-    --lime: #7bd235;
-    --primary: #467fcf;
-    --secondary: #868e96;
-    --success: #5eba00;
-    --info: #45aaf2;
-    --warning: #f1c40f;
-    --danger: #cd201f;
-    --light: #f8f9fa;
-    --dark: #343a40;
+    --gray: #6b7280;
+    --gray-ac: #9ca3af;
+    --gray-dark: #1f2937;
+    --azure: #0ea5e9;
+    --lime: #84cc16;
+    --primary: #3b82f6;
+    --secondary: #6b7280;
+    --success: #10b981;
+    --info: #0ea5e9;
+    --warning: #eab308;
+    --danger: #ef4444;
+    --light: #f3f4f6;
+    --dark: #111827;
     --breakpoint-xs: 0;
     --breakpoint-sm: 576px;
     --breakpoint-md: 768px;
     --breakpoint-lg: 992px;
     --breakpoint-xl: 1280px;
-    --font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif,
+    --font-family-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
     --font-family-monospace: Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
@@ -82,7 +82,7 @@ section {
 
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
     font-size: 0.9375rem;
     font-weight: 400;
     line-height: 1.5;

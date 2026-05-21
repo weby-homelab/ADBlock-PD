@@ -1,35 +1,38 @@
 .nav-tabs .nav-link.active {
-    border-color: var(--btn-success-bgcolor);
-    color: var(--btn-success-bgcolor);
+    border-color: #3b82f6;
+    color: #3b82f6;
     background: transparent;
 }
 
 .nav-tabs .nav-link.active:hover {
-    border-color: #4b9400;
-    color: #4b9400;
+    border-color: #2563eb;
+    color: #2563eb;
 }
 
 .nav-icon {
     width: 15px;
     height: 15px;
     margin-right: 6px;
-    stroke: #9aa0ac;
+    stroke: #94a3b8;
+    transition: stroke var(--transition-fast);
 }
 
 .nav-tabs .nav-link.active .nav-icon,
 .nav-tabs .nav-item.show .nav-icon {
-    stroke: var(--green-74);
+    stroke: #3b82f6;
 }
 
 .nav-tabs .nav-link.active:hover .nav-icon,
 .nav-tabs .nav-item.show:hover .nav-icon {
-    stroke: #58a273;
+    stroke: #2563eb;
 }
 
 .nav-tabs .nav-link {
     width: 100%;
     border: 0;
     padding: 20px 0;
+    transition: color var(--transition-fast);
+    position: relative;
 }
 
 .header {
@@ -46,8 +49,10 @@
     display: block;
     width: 250px;
     height: 100vh;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: var(--header-bgcolor);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     overflow-y: auto;
 }
 
@@ -74,9 +79,9 @@
 }
 
 .nav-tabs .nav-item.show .nav-link {
-    color: var(--green-74);
-    background-color: #fff;
-    border-bottom-color: var(--green-74);
+    color: #3b82f6;
+    background-color: transparent;
+    border-bottom-color: #3b82f6;
 }
 
 .header__right {
@@ -95,12 +100,18 @@
     min-width: 25px;
     padding: 2px;
     margin-left: 10px;
-    color: #9aa0ac;
+    color: #94a3b8;
+    transition: color var(--transition-fast);
 }
 
 .header__logout:hover,
 .header__logout:focus {
-    color: #6e7687;
+    color: #64748b;
+}
+
+[data-theme='dark'] .header__logout:hover,
+[data-theme='dark'] .header__logout:focus {
+    color: #e2e8f0;
 }
 
 .header__logout-icon {
@@ -136,9 +147,18 @@
 
     .nav-tabs .nav-link {
         width: auto;
-        border-bottom: 1px solid transparent;
+        border-bottom: 2px solid transparent;
         font-size: 13px;
         white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #3b82f6;
+    }
+
+    [data-theme='dark'] .nav-tabs .nav-link:hover {
+        color: #60a5fa;
     }
 
     .mobile-menu {
@@ -161,7 +181,7 @@
     }
 
     .nav-icon--gray {
-        color: #9aa0ac;
+        color: #94a3b8;
     }
 
     .nav-icon--white {

@@ -63,7 +63,8 @@
     z-index: 100;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.6);
+    background-color: var(--loading-bg);
+    border-radius: 20px;
 }
 
 .card-body--loading:after {
@@ -76,14 +77,16 @@
     height: 40px;
     margin-top: -20px;
     margin-left: -20px;
-    background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2047.6%2047.6%22%20height%3D%22100%25%22%20width%3D%22100%25%22%3E%3Cpath%20opacity%3D%22.235%22%20fill%3D%22%23979797%22%20d%3D%22M44.4%2011.9l-5.2%203c1.5%202.6%202.4%205.6%202.4%208.9%200%209.8-8%2017.8-17.8%2017.8-6.6%200-12.3-3.6-15.4-8.9l-5.2%203C7.3%2042.8%2015%2047.6%2023.8%2047.6c13.1%200%2023.8-10.7%2023.8-23.8%200-4.3-1.2-8.4-3.2-11.9z%22%2F%3E%3Cpath%20fill%3D%22%2366b574%22%20d%3D%22M3.2%2035.7C0%2030.2-.8%2023.8.8%2017.6%202.5%2011.5%206.4%206.4%2011.9%203.2%2017.4%200%2023.8-.8%2030%20.8c6.1%201.6%2011.3%205.6%2014.4%2011.1l-5.2%203c-2.4-4.1-6.2-7.1-10.8-8.3C23.8%205.4%2019%206%2014.9%208.4s-7.1%206.2-8.3%2010.8c-1.2%204.6-.6%209.4%201.8%2013.5l-5.2%203z%22%2F%3E%3C%2Fsvg%3E');
+    background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2047.6%2047.6%22%20height%3D%22100%25%22%20width%3D%22100%25%22%3E%3Cpath%20opacity%3D%22.235%22%20fill%3D%22%23979797%22%20d%3D%22M44.4%2011.9l-5.2%203c1.5%202.6%202.4%205.6%202.4%208.9%200%209.8-8%2017.8-17.8%2017.8-6.6%200-12.3-3.6-15.4-8.9l-5.2%203C7.3%2042.8%2015%2047.6%2023.8%2047.6c13.1%200%2023.8-10.7%2023.8-23.8%200-4.3-1.2-8.4-3.2-11.9z%22%2F%3E%3Cpath%20fill%3D%22%233b82f6%22%20d%3D%22M3.2%2035.7C0%2030.2-.8%2023.8.8%2017.6%202.5%2011.5%206.4%206.4%2011.9%203.2%2017.4%200%2023.8-.8%2030%20.8c6.1%201.6%2011.3%205.6%2014.4%2011.1l-5.2%203c-2.4-4.1-6.2-7.1-10.8-8.3C23.8%205.4%2019%206%2014.9%208.4s-7.1%206.2-8.3%2010.8c-1.2%204.6-.6%209.4%201.8%2013.5l-5.2%203z%22%2F%3E%3C%2Fsvg%3E');
     will-change: transform;
     animation: clockwise 2s linear infinite;
 }
 
 .card-title-stats {
     font-size: 13px;
-    color: #9aa0ac;
+    color: #64748b;
+    font-weight: 500;
+    letter-spacing: 0.01em;
 }
 
 .card-body-stats {
@@ -101,6 +104,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
 .card-value-percent {
@@ -110,6 +116,9 @@
     font-size: 0.9rem;
     line-height: 1;
     height: auto;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    opacity: 0.7;
 }
 
 .card-value-percent:after {
@@ -139,15 +148,23 @@
 }
 
 .card .logs__cell--red {
-    background-color: #fff4f2;
+    background-color: rgba(254, 226, 226, 0.5);
 }
 
 .card .logs__cell--green {
-    background-color: #f1faf3;
+    background-color: rgba(220, 252, 231, 0.5);
 }
 
 .card .logs__row--blue {
-    background-color: #ecf7ff;
+    background-color: rgba(219, 234, 254, 0.5);
+}
+
+[data-theme='dark'] .card .logs__cell--red {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme='dark'] .card .logs__cell--green {
+    background-color: rgba(34, 197, 94, 0.1);
 }
 
 [data-theme='dark'] .card .logs__row--blue {
