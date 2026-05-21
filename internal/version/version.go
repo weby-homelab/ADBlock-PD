@@ -2,6 +2,7 @@
 package version
 
 import (
+	"encoding/json"
 	"fmt"
 	"runtime"
 	"runtime/debug"
@@ -183,5 +184,19 @@ func writeCommitTime(b *strings.Builder) {
 		stringutil.WriteToBuilder(b, vFmtTimeHdr, fmt.Sprintf("parse error: %s", err), "\n")
 	} else {
 		stringutil.WriteToBuilder(b, vFmtTimeHdr, time.Unix(commitTimeUnix, 0).String(), "\n")
+	}
+}
+
+// SetFromPackageJSON parses version from package.json JSON data.
+func SetFromPackageJSON(pkgJSON []byte) {
+	var pkg struct {
+		Version string `json:"version"`
+	}
+	if err := json.Unmarshal(pkgJSON, &pkg); err == nil && pkg.Version != "" {
+		v := pkg.Version
+		if !strings.HasPrefix(v, "v") {
+			v = "v" + v
+		}
+		version = v
 	}
 }

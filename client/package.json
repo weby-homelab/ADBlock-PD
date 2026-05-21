@@ -1,6 +1,6 @@
 {
   "name": "dashboard",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "build-dev": "cross-env NODE_ENV=development BUILD_ENV=dev webpack --config webpack.dev.js",
