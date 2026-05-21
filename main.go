@@ -10,6 +10,7 @@ import (
 	_ "time/tzdata"
 
 	"github.com/weby-homelab/adblock-pd/internal/home"
+	"github.com/weby-homelab/adblock-pd/internal/version"
 )
 
 // Embed the prebuilt client here since we strive to keep .go files inside the
@@ -19,6 +20,10 @@ import (
 //go:embed build
 var clientBuildFS embed.FS
 
+//go:embed client/package.json
+var clientPackageJSON []byte
+
 func main() {
+	version.SetFromPackageJSON(clientPackageJSON)
 	home.Main(clientBuildFS)
 }
