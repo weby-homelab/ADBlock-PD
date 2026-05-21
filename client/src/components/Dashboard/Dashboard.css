@@ -56,6 +56,11 @@
     justify-content: space-between;
     border-top: 1px solid var(--card-border-color);
     padding: 0.75rem 1.5rem;
+    transition: background-color var(--transition-fast);
+}
+
+.counters__row:hover {
+    background-color: var(--accent-glow);
 }
 
 .counters__column--value {
@@ -63,6 +68,8 @@
     margin-left: 1.5rem;
     text-align: right;
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
 }
 
 @media screen and (min-width: 768px) {

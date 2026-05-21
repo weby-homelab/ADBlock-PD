@@ -1,5 +1,7 @@
 .footer {
-    padding: 1rem 0;
+    padding: 2rem 0;
+    margin-top: 3rem;
+    border-top: 1px solid var(--border-color);
 }
 
 .footer__row {
@@ -32,6 +34,14 @@
     display: inline-block;
     vertical-align: middle;
     margin-bottom: 8px;
+    color: var(--scolor);
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.footer__link:hover {
+    color: var(--blue);
+    transform: translateY(-1px);
+    text-decoration: none;
 }
 
 .footer__link--report {
