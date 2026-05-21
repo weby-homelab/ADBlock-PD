@@ -163,6 +163,18 @@ docker build -t adblock-pd:local .
 
 ---
 
+## 🌿 Branches & Development Model
+
+To maintain stability and supply-chain security, the repository adheres to a strict branching workflow:
+- **`master`** — the primary release branch. Direct commits are restricted. All integrations must go through Pull Requests and pass automated CI testing. Merging into `master` triggers a build and deploy of the `latest` image to Docker Hub.
+- **`feature/*`** — branches for developing new features (e.g., visual or functional upgrades).
+- **`fix/*`** — branches for security patches and bug fixes.
+- **`release/*`** — short-lived branches for release compilation and packaging.
+
+Every version tag and merge commit is cryptographically GPG-signed to verify code authenticity and integrity.
+
+---
+
 ## 📜 License & Disclaimer
 
 This project is distributed under the **GNU General Public License v3.0 (GPL-3.0)**. 
