@@ -51,7 +51,7 @@ jobs:
     - name: Build Backend (Go)
       if: matrix.language == 'go'
       env:
-        GOTOOLCHAIN: go1.26.2
+        GOTOOLCHAIN: go1.26.3
       run: |
         go mod tidy
         go build -v ./...
