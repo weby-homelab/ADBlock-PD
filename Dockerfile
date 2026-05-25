@@ -9,7 +9,7 @@ RUN npm run build-prod
 
 # Stage 2: Build the backend
 FROM golang:1.24-bullseye AS backend-builder
-ENV GOTOOLCHAIN=go1.26.2
+ENV GOTOOLCHAIN=go1.26.3
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
