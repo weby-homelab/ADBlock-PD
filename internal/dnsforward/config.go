@@ -365,7 +365,8 @@ func (s *Server) newProxyConfig(ctx context.Context) (conf *proxy.Config, err er
 		PendingRequests: &proxy.PendingRequestsConfig{
 			Enabled: srvConf.PendingRequestsEnabled,
 		},
-		HTTPConfig: httpConf,
+		HTTPConfig:    httpConf,
+		DNSSECEnabled: srvConf.EnableDNSSEC,
 	}
 
 	if srvConf.EDNSClientSubnet.UseCustom {
