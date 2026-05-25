@@ -1,6 +1,6 @@
 module github.com/weby-homelab/adblock-pd
 
-go 1.24
+go 1.26.3
 
 require (
 	github.com/AdguardTeam/dnsproxy v0.81.4
