@@ -116,6 +116,12 @@ func Main(clientBuildFS fs.FS) {
 		baseLogger.InfoContext(ctx, "adguard home is running as a service")
 	}
 
+	var glTokenFileRoot *os.Root
+	if opts.glinetMode {
+		glTokenFileRoot, err = os.OpenRoot("/tmp/")
+		fatalOnError(err)
+	}
+
 	done := make(chan struct{})
 
 	signals := make(chan os.Signal, 1)
@@ -123,9 +129,20 @@ func Main(clientBuildFS fs.FS) {
 
 	sigHdlrLogger := baseLogger.With(slogutil.KeyPrefix, "signalhdlr")
 	sigHdlr := newSignalHandler(sigHdlrLogger, signals, func(ctx context.Context) {
+		defer close(done)
+
 		cleanup(ctx)
 		cleanupAlways()
-		close(done)
+
+		if !opts.glinetMode {
+			return
+		}
+
+		closeErr := glTokenFileRoot.Close()
+		if closeErr != nil {
+			baseLogger.ErrorContext(ctx, "closing glinet token root", slogutil.KeyError, closeErr)
+			os.Exit(osutil.ExitCodeFailure)
+		}
 	})
 
 	go sigHdlr.handle(ctx)
@@ -136,6 +153,7 @@ func Main(clientBuildFS fs.FS) {
 			ctx,
 			baseLogger,
 			svcLogger,
+			glTokenFileRoot,
 			opts,
 			clientBuildFS,
 			signals,
@@ -153,7 +171,7 @@ func Main(clientBuildFS fs.FS) {
 	}
 
 	// run the protection
-	run(ctx, baseLogger, opts, clientBuildFS, done, sigHdlr, workDir, confPath)
+	run(ctx, baseLogger, opts, clientBuildFS, glTokenFileRoot, done, sigHdlr, workDir, confPath)
 }
 
 // setupContext initializes [globalContext] fields.  It also reads and upgrades
@@ -700,7 +718,9 @@ func fatalOnError(err error) {
 	}
 }
 
-// run configures and starts ADBlock-Private-DNS.
+// run configures and starts ADBlock-Private-DNS.  base and sigHdlr must not be nil.
+// glTokenFileRoot must not be nil if opts.glinetMode is true.  clientBuildFS
+// must not be nil if opts.localFrontend is false.
 //
 // TODO(e.burkov):  Make opts a pointer.
 func run(
@@ -708,6 +728,7 @@ func run(
 	baseLogger *slog.Logger,
 	opts options,
 	clientBuildFS fs.FS,
+	glTokenFileRoot *os.Root,
 	done chan struct{},
 	sigHdlr *signalHandler,
 	workDir string,
@@ -765,7 +786,7 @@ func run(
 	err = os.MkdirAll(dataDirPath, aghos.DefaultPermDir)
 	fatalOnError(errors.Annotate(err, "creating DNS data dir at %s: %w", dataDirPath))
 
-	auth, err := initUsers(ctx, baseLogger, workDir, mux, opts.glinetMode)
+	auth, err := initUsers(ctx, baseLogger, workDir, mux, opts.glinetMode, glTokenFileRoot)
 	fatalOnError(err)
 
 	confModifier.setAuth(auth)
@@ -936,13 +957,15 @@ func checkPermissions(
 }
 
 // initUsers initializes authentication module and clears the [config.Users]
-// field.
+// field.  baseLogger and mux must not be nil.  glTokenRoot must not be nil if
+// isGLiNet is true.
 func initUsers(
 	ctx context.Context,
 	baseLogger *slog.Logger,
 	workDir string,
 	mux *http.ServeMux,
 	isGLiNet bool,
+	glTokenRoot *os.Root,
 ) (auth *auth, err error) {
 	var rateLimiter loginRateLimiter
 	if config.AuthAttempts > 0 && config.AuthBlockMin > 0 {
@@ -955,15 +978,16 @@ func initUsers(
 
 	dataDirPath := filepath.Join(workDir, dataDir)
 	auth, err = newAuth(ctx, &authConfig{
-		baseLogger:     baseLogger,
-		mux:            mux,
-		rateLimiter:    rateLimiter,
-		trustedProxies: netutil.SliceSubnetSet(netutil.UnembedPrefixes(config.DNS.TrustedProxies)),
-		dbFilename:     filepath.Join(dataDirPath, sessionsDBName),
-		doHRoutes:      config.HTTPConfig.DoH.Routes,
-		users:          config.Users,
-		sessionTTL:     time.Duration(config.HTTPConfig.SessionTTL),
-		isGLiNet:       isGLiNet,
+		baseLogger:      baseLogger,
+		mux:             mux,
+		rateLimiter:     rateLimiter,
+		trustedProxies:  netutil.SliceSubnetSet(netutil.UnembedPrefixes(config.DNS.TrustedProxies)),
+		dbFilename:      filepath.Join(dataDirPath, sessionsDBName),
+		doHRoutes:       config.HTTPConfig.DoH.Routes,
+		users:           config.Users,
+		sessionTTL:      time.Duration(config.HTTPConfig.SessionTTL),
+		gliNetTokenRoot: glTokenRoot,
+		isGLiNet:        isGLiNet,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initializing auth module: %w", err)
