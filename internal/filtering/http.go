@@ -571,6 +571,11 @@ func (d *DNSFilter) handleCheckHost(w http.ResponseWriter, r *http.Request) {
 		// multiple client names.  This will handle the case when a rule exists
 		// but the persistent client does not.
 		d.ApplyAdditionalFiltering(netip.Addr{}, cli, setts)
+	} else {
+		// Apply blocked services filtering even if the client is not known,
+		// because blocked services rules don't depend on the client and should
+		// be applied regardless of whether the client is known or not.
+		d.ApplyBlockedServices(setts)
 	}
 
 	result, err := d.CheckHost(host, qType, setts)

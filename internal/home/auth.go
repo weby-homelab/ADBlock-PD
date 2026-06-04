@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/weby-homelab/adblock-pd/internal/aghuser"
@@ -76,6 +77,10 @@ type authConfig struct {
 	// sessionTTL is the TTL (Time To Live) for web user sessions.
 	sessionTTL time.Duration
 
+	// gliNetTokenRoot is the root where GLiNet tokens are stored.  It must not
+	// be nil if isGLiNet is true.
+	gliNetTokenRoot *os.Root
+
 	// isGLiNet indicates whether GLiNet mode is enabled.
 	isGLiNet bool
 }
@@ -102,6 +107,10 @@ type auth struct {
 
 	// doHRoutes is a list of DoH routes for public access.
 	doHRoutes []string
+
+	// gliNetTokenRoot is the root where GLiNet tokens are stored.  It must not
+	// be nil if isGLiNet is true.
+	gliNetTokenRoot *os.Root
 
 	// isGLiNet indicates whether GLiNet mode is enabled.
 	isGLiNet bool
@@ -133,15 +142,16 @@ func newAuth(ctx context.Context, conf *authConfig) (a *auth, err error) {
 	}
 
 	return &auth{
-		logger:         conf.baseLogger.With(slogutil.KeyPrefix, "auth"),
-		mux:            conf.mux,
-		rateLimiter:    conf.rateLimiter,
-		trustedProxies: conf.trustedProxies,
-		sessions:       s,
-		users:          userDB,
-		doHRoutes:      conf.doHRoutes,
-		isGLiNet:       conf.isGLiNet,
-		isUserless:     len(conf.users) == 0,
+		logger:          conf.baseLogger.With(slogutil.KeyPrefix, "auth"),
+		mux:             conf.mux,
+		rateLimiter:     conf.rateLimiter,
+		trustedProxies:  conf.trustedProxies,
+		sessions:        s,
+		users:           userDB,
+		doHRoutes:       conf.doHRoutes,
+		gliNetTokenRoot: conf.gliNetTokenRoot,
+		isGLiNet:        conf.isGLiNet,
+		isUserless:      len(conf.users) == 0,
 	}, nil
 }
 
@@ -149,13 +159,13 @@ func newAuth(ctx context.Context, conf *authConfig) (a *auth, err error) {
 func (a *auth) middleware() (mw httputil.Middleware) {
 	if a.isGLiNet {
 		return newAuthMiddlewareGLiNet(&authMiddlewareGLiNetConfig{
-			logger:          a.logger,
-			mux:             a.mux,
-			clock:           timeutil.SystemClock{},
-			doHRoutes:       a.doHRoutes,
-			tokenFilePrefix: glFilePrefix,
-			ttl:             glTokenTimeout,
-			maxTokenSize:    MaxFileSize,
+			logger:        a.logger,
+			mux:           a.mux,
+			clock:         timeutil.SystemClock{},
+			doHRoutes:     a.doHRoutes,
+			tokenFileRoot: a.gliNetTokenRoot,
+			ttl:           glTokenTimeout,
+			maxTokenSize:  MaxFileSize,
 		})
 	}
 
