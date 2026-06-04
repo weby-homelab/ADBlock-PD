@@ -1,6 +1,6 @@
 module github.com/weby-homelab/adblock-pd
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/AdguardTeam/dnsproxy v0.81.4
@@ -37,7 +37,7 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.4.0.20260405193028-802e24f4fbcc
 	golang.org/x/crypto v0.50.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	golang.org/x/net v0.53.0
+	golang.org/x/net v0.55.0
 	golang.org/x/sys v0.43.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	howett.net/plist v1.0.1
