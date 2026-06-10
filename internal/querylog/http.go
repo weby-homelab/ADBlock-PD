@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/weby-homelab/adblock-pd/internal/aghalg"
 	"github.com/weby-homelab/adblock-pd/internal/aghhttp"
 	"github.com/weby-homelab/adblock-pd/internal/aghnet"
+	"github.com/weby-homelab/adblock-pd/internal/filtering"
 	"github.com/AdguardTeam/golibs/errors"
 	"github.com/AdguardTeam/golibs/logutil/slogutil"
 	"github.com/AdguardTeam/golibs/timeutil"
@@ -361,6 +361,7 @@ func (l *queryLog) parseSearchCriterion(
 	strict := getDoubleQuotesEnclosedValue(&val)
 
 	var asciiVal string
+	var values []string
 	switch ct {
 	case ctTerm:
 		// Decode lowercased value from punycode to make EqualFold and
@@ -376,18 +377,25 @@ func (l *queryLog) parseSearchCriterion(
 			asciiVal = ""
 		}
 	case ctFilteringStatus:
-		if !slices.Contains(filteringStatusValues, val) {
+		if !filteringStatusValues.Has(val) {
 			return false, sc, fmt.Errorf("invalid value %s", val)
+		}
+	case ctReason:
+		values, err = parseReason(q, name)
+		if err != nil {
+			// Don't wrap the error, because it's informative enough as is.
+			return false, sc, err
 		}
 	default:
 		return false, sc, fmt.Errorf(
 			"invalid criterion type %v: should be one of %v",
 			ct,
-			[]criterionType{ctTerm, ctFilteringStatus},
+			[]criterionType{ctTerm, ctFilteringStatus, ctReason},
 		)
 	}
 
 	sc = searchCriterion{
+		values:        values,
 		criterionType: ct,
 		value:         val,
 		asciiVal:      asciiVal,
@@ -397,8 +405,29 @@ func (l *queryLog) parseSearchCriterion(
 	return true, sc, nil
 }
 
+// parseReason parses reason search criterion from URL parameters.
+func parseReason(q url.Values, name string) (values []string, err error) {
+	var errs []error
+	for _, val := range q[name] {
+		_, ok := filtering.ReasonByName[val]
+		if !ok {
+			errs = append(errs, fmt.Errorf("reason: %w: %q", errors.ErrBadEnumValue, val))
+
+			continue
+		}
+
+		values = append(values, val)
+	}
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	return values, nil
+}
+
 // parseSearchParams parses search parameters from the HTTP request's query
-// string.
+// string.  r must not be nil.
 func (l *queryLog) parseSearchParams(
 	ctx context.Context,
 	r *http.Request,
@@ -406,6 +435,11 @@ func (l *queryLog) parseSearchParams(
 	p = newSearchParams()
 
 	q := r.URL.Query()
+	if q.Has("reason") && q.Has("response_status") {
+		return nil,
+			errors.Error(`"reason" and "response_status" criteria cannot be used together`)
+	}
+
 	olderThan := q.Get("older_than")
 	if len(olderThan) != 0 {
 		p.olderThan, err = time.Parse(time.RFC3339Nano, olderThan)
@@ -414,18 +448,36 @@ func (l *queryLog) parseSearchParams(
 		}
 	}
 
-	if limit, err := strconv.Atoi(q.Get("limit")); err == nil {
-		p.limit = limit
+	var limit64 int64
+	if limit64, err = strconv.ParseInt(q.Get("limit"), 10, 64); err == nil {
+		p.limit = int(limit64)
 	}
 
-	if offset, err := strconv.Atoi(q.Get("offset")); err == nil {
-		p.offset = offset
+	var offset64 int64
+	if offset64, err = strconv.ParseInt(q.Get("offset"), 10, 64); err == nil {
+		p.offset = int(offset64)
 
 		// If we don't use "olderThan" and use offset/limit instead, we should change the default behavior
 		// and scan all log records until we found enough log entries
 		p.maxFileScanEntries = 0
 	}
 
+	err = l.parseSearchCriterions(ctx, q, p)
+	if err != nil {
+		// Don't wrap the error, because it's informative enough as is.
+		return nil, err
+	}
+
+	return p, nil
+}
+
+// parseSearchCriterions parses search criterions from the URL query parameter
+// values.  p must not be nil.
+func (l *queryLog) parseSearchCriterions(
+	ctx context.Context,
+	q url.Values,
+	p *searchParams,
+) (err error) {
 	for _, v := range []struct {
 		urlField string
 		ct       criterionType
@@ -435,12 +487,16 @@ func (l *queryLog) parseSearchParams(
 	}, {
 		urlField: "response_status",
 		ct:       ctFilteringStatus,
+	}, {
+		urlField: "reason",
+		ct:       ctReason,
 	}} {
 		var ok bool
 		var c searchCriterion
 		ok, c, err = l.parseSearchCriterion(ctx, q, v.urlField, v.ct)
 		if err != nil {
-			return nil, err
+			// Don't wrap the error, because it's informative enough as is.
+			return err
 		}
 
 		if ok {
@@ -448,5 +504,5 @@ func (l *queryLog) parseSearchParams(
 		}
 	}
 
-	return p, nil
+	return nil
 }

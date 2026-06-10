@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/netip"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -33,6 +34,7 @@ import (
 	"github.com/weby-homelab/adblock-pd/internal/permcheck"
 	"github.com/weby-homelab/adblock-pd/internal/querylog"
 	"github.com/weby-homelab/adblock-pd/internal/stats"
+
 	"github.com/weby-homelab/adblock-pd/internal/version"
 	"github.com/AdguardTeam/dnsproxy/upstream"
 	"github.com/AdguardTeam/golibs/errors"
@@ -110,10 +112,10 @@ func Main(clientBuildFS fs.FS) {
 	fatalOnError(err)
 
 	// Print the first message after logger is configured.
-	baseLogger.InfoContext(ctx, "starting adguard home", "version", version.Full())
+	baseLogger.InfoContext(ctx, "starting adblock-private-dns", "version", version.Full())
 	baseLogger.DebugContext(ctx, "current working directory", "path", workDir)
 	if opts.runningAsService {
-		baseLogger.InfoContext(ctx, "adguard home is running as a service")
+		baseLogger.InfoContext(ctx, "adblock-private-dns is running as a service")
 	}
 
 	var glTokenFileRoot *os.Root
@@ -193,7 +195,7 @@ func setupContext(
 	}
 
 	if isFirstRun {
-		baseLogger.InfoContext(ctx, "this is the first time adguard home has been launched")
+		baseLogger.InfoContext(ctx, "this is the first time adblock-private-dns has been launched")
 		checkNetworkPermissions(ctx, baseLogger)
 
 		return nil
@@ -219,9 +221,9 @@ func setupContext(
 // logIfUnsupported logs a formatted warning if the error is one of the
 // unsupported errors and returns nil.  If err is nil, logIfUnsupported returns
 // nil.  Otherwise, it returns err.
-func logIfUnsupported(msg string, err error) (outErr error) {
+func logIfUnsupported(ctx context.Context, l *slog.Logger, msg string, err error) (outErr error) {
 	if errors.Is(err, errors.ErrUnsupported) {
-		log.Debug(msg, err)
+		l.DebugContext(ctx, msg, slogutil.KeyError, err)
 
 		return nil
 	}
@@ -229,8 +231,9 @@ func logIfUnsupported(msg string, err error) (outErr error) {
 	return err
 }
 
-// configureOS sets the OS-related configuration.
-func configureOS(conf *configuration) (err error) {
+// configureOS sets the OS-related configuration.  l and conf must not be nil.
+// conf must be valid.
+func configureOS(ctx context.Context, l *slog.Logger, conf *configuration) (err error) {
 	osConf := conf.OSConfig
 	if osConf == nil {
 		return nil
@@ -238,32 +241,32 @@ func configureOS(conf *configuration) (err error) {
 
 	if osConf.Group != "" {
 		err = aghos.SetGroup(osConf.Group)
-		err = logIfUnsupported("warning: setting group", err)
+		err = logIfUnsupported(ctx, l, "warning: setting group", err)
 		if err != nil {
 			return fmt.Errorf("setting group: %w", err)
 		}
 
-		log.Info("group set to %s", osConf.Group)
+		l.InfoContext(ctx, "group set", "groupname", osConf.Group)
 	}
 
 	if osConf.User != "" {
 		err = aghos.SetUser(osConf.User)
-		err = logIfUnsupported("warning: setting user", err)
+		err = logIfUnsupported(ctx, l, "warning: setting user", err)
 		if err != nil {
 			return fmt.Errorf("setting user: %w", err)
 		}
 
-		log.Info("user set to %s", osConf.User)
+		l.InfoContext(ctx, "user set", "username", osConf.User)
 	}
 
 	if osConf.RlimitNoFile != 0 {
 		err = aghos.SetRlimit(osConf.RlimitNoFile)
-		err = logIfUnsupported("warning: setting rlimit", err)
+		err = logIfUnsupported(ctx, l, "warning: setting rlimit", err)
 		if err != nil {
 			return fmt.Errorf("setting rlimit: %w", err)
 		}
 
-		log.Info("rlimit_nofile set to %d", osConf.RlimitNoFile)
+		l.InfoContext(ctx, "rlimit_nofile set", "rlimit_nofile", osConf.RlimitNoFile)
 	}
 
 	return nil
@@ -591,6 +594,9 @@ type webConfig struct {
 	// is false, then this field must not be nil.
 	clientBuildFS fs.FS
 
+	// updater is used for handling updates.  It must not be nil.
+	updater interface{}
+
 	// baseLogger is used for logging init process and for logging inside web
 	// api.  It must not be nil.
 	baseLogger *slog.Logger
@@ -643,6 +649,8 @@ func newWeb(ctx context.Context, conf *webConfig) (web *webAPI, err error) {
 			return nil, fmt.Errorf("getting embedded client subdir: %w", err)
 		}
 	}
+
+	// disableUpdate := true
 
 	webConf := &webAPIConfig{
 		CommandConstructor: executil.SystemCommandConstructor{},
@@ -745,7 +753,7 @@ func run(
 	err := setupContext(ctx, baseLogger, opts, workDir, confPath, isFirstRun)
 	fatalOnError(err)
 
-	err = configureOS(config)
+	err = configureOS(ctx, baseLogger, config)
 	fatalOnError(err)
 
 	// Clients package uses filtering package's static data
@@ -793,6 +801,7 @@ func run(
 
 	conf := &webConfig{
 		clientBuildFS:  clientBuildFS,
+		updater:        nil,
 		opts:           opts,
 		baseLogger:     baseLogger,
 		tlsManager:     tlsMgr,
@@ -913,6 +922,8 @@ func initTLS(
 	return tlsMgr, nil
 }
 
+// initUpdate configures and runs update of this application.  logger and tlsMgr
+// must not be nil.
 func initUpdate(
 	_ context.Context,
 	_ *slog.Logger,
@@ -925,6 +936,9 @@ func initUpdate(
 	return nil, false
 }
 
+// newUpdater creates a new ADBlock-Private-DNS updater.  l and conf must not be nil.
+// workDir, confPath, and execPath must not be empty.  isCustomURL is true if
+// the user has specified a custom version announcement URL.
 func newUpdater(
 	_ context.Context,
 	_ *slog.Logger,
@@ -986,8 +1000,8 @@ func initUsers(
 		doHRoutes:       config.HTTPConfig.DoH.Routes,
 		users:           config.Users,
 		sessionTTL:      time.Duration(config.HTTPConfig.SessionTTL),
-		gliNetTokenRoot: glTokenRoot,
 		isGLiNet:        isGLiNet,
+		gliNetTokenRoot: glTokenRoot,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("initializing auth module: %w", err)
@@ -1021,12 +1035,12 @@ https://github.com/weby-homelab/adblock-pd/wiki/Getting-Started#running-without-
 // checkNetworkPermissions checks if the current user permissions are enough to
 // use the required networking functionality.  l must not be nil.
 func checkNetworkPermissions(ctx context.Context, l *slog.Logger) {
-	l.InfoContext(ctx, "checking if adguard home has the necessary permissions")
+	l.InfoContext(ctx, "checking if adblock-private-dns has the necessary permissions")
 
 	if ok, err := aghnet.CanBindPrivilegedPorts(ctx, l); !ok || err != nil {
 		l.ErrorContext(
 			ctx,
-			"this is the first launch of adguard home; permission check failed but continuing due to Docker environment",
+			"this is the first launch of adblock-private-dns; permission check failed but continuing due to Docker environment",
 		)
 	}
 
@@ -1044,7 +1058,7 @@ func checkNetworkPermissions(ctx context.Context, l *slog.Logger) {
 		)
 	}
 
-	l.InfoContext(ctx, "adguard home can bind to port 53")
+	l.InfoContext(ctx, "adblock-private-dns can bind to port 53")
 }
 
 // Write PID to a file
@@ -1171,56 +1185,63 @@ func loadCmdLineOpts() (opts options) {
 }
 
 // printWebAddrs prints addresses built from proto, addr, and an appropriate
-// port.  At least one address is printed with the value of port.  Output
-// example:
+// port.  At least one address is printed with the value of port.  l must not be
+// nil.  Output example:
 //
-//	go to http://127.0.0.1:80
-func printWebAddrs(proto, addr string, port uint16) {
-	log.Printf("go to %s://%s", proto, netutil.JoinHostPort(addr, port))
+//	2026/04/08 14:01:43.794575 56031#1 [info] serving url=http://127.0.0.1:3000
+func printWebAddrs(ctx context.Context, l *slog.Logger, proto, addr string, port uint16) {
+	u := &url.URL{
+		Scheme: proto,
+		Host:   netutil.JoinHostPort(addr, port),
+	}
+
+	l.InfoContext(ctx, "serving", "url", u.String())
 }
 
 // printHTTPAddresses prints the IP addresses which user can use to access the
-// admin interface.  proto is either schemeHTTP or schemeHTTPS.
+// admin interface.  proto is either [urlutil.SchemeHTTPS] or
+// [urlutil.SchemeHTTP].  l must not be nil.  If proto is [urlutil.SchemeHTTPS],
+// then tlsMgr must not be nil.
 //
 // TODO(s.chzhen):  Implement separate functions for HTTP and HTTPS.
-func printHTTPAddresses(proto string, tlsMgr *tlsManager) {
-	var tlsConf *tlsConfigSettings
+func printHTTPAddresses(ctx context.Context, l *slog.Logger, proto string, tlsMgr *tlsManager) {
+	var extTLSConf *tlsConfigSettings
 	if tlsMgr != nil {
-		tlsConf = tlsMgr.config()
+		extTLSConf = tlsMgr.extendedTLSConfig()
 	}
 
 	port := config.HTTPConfig.Address.Port()
 	if proto == urlutil.SchemeHTTPS {
-		port = tlsConf.PortHTTPS
+		port = extTLSConf.PortHTTPS
 	}
 
-	if proto == urlutil.SchemeHTTPS && tlsConf.ServerName != "" {
-		printWebAddrs(proto, tlsConf.ServerName, tlsConf.PortHTTPS)
+	if proto == urlutil.SchemeHTTPS && extTLSConf.ServerName != "" {
+		printWebAddrs(ctx, l, proto, extTLSConf.ServerName, extTLSConf.PortHTTPS)
 
 		return
 	}
 
 	bindHost := config.HTTPConfig.Address.Addr()
 	if !bindHost.IsUnspecified() {
-		printWebAddrs(proto, bindHost.String(), port)
+		printWebAddrs(ctx, l, proto, bindHost.String(), port)
 
 		return
 	}
 
 	ifaces, err := aghnet.GetValidNetInterfacesForWeb()
 	if err != nil {
-		log.Error("web: getting iface ips: %s", err)
+		l.ErrorContext(ctx, "web: getting iface ips", slogutil.KeyError, err)
 		// That's weird, but we'll ignore it.
 		//
 		// TODO(e.burkov): Find out when it happens.
-		printWebAddrs(proto, bindHost.String(), port)
+		printWebAddrs(ctx, l, proto, bindHost.String(), port)
 
 		return
 	}
 
 	for _, iface := range ifaces {
 		for _, addr := range iface.Addresses {
-			printWebAddrs(proto, addr.String(), port)
+			printWebAddrs(ctx, l, proto, addr.String(), port)
 		}
 	}
 }

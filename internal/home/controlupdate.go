@@ -12,6 +12,8 @@ import (
 	"github.com/weby-homelab/adblock-pd/internal/aghnet"
 )
 
+
+
 // handleVersionJSON is the handler for the POST /control/version.json HTTP API.
 //
 // TODO(a.garipov): Find out if this API used with a GET method by anyone.
@@ -60,14 +62,6 @@ func (web *webAPI) handleVersionJSON(w http.ResponseWriter, r *http.Request) {
 	aghhttp.WriteJSONResponseOK(ctx, l, w, r, resp)
 }
 
-// VersionInfo contains information about a new version.
-type VersionInfo struct {
-	NewVersion      string          `json:"new_version,omitempty"`
-	Announcement    string          `json:"announcement,omitempty"`
-	AnnouncementURL string          `json:"announcement_url,omitempty"`
-	CanAutoUpdate   aghalg.NullBool `json:"can_autoupdate,omitempty"`
-}
-
 // requestVersionInfo sets the VersionInfo field of resp if it can reach the
 // update server.
 func (web *webAPI) requestVersionInfo(
@@ -78,7 +72,6 @@ func (web *webAPI) requestVersionInfo(
 	resp.VersionInfo = VersionInfo{
 		CanAutoUpdate: aghalg.NBFalse,
 	}
-
 	return nil
 }
 
@@ -86,7 +79,6 @@ func (web *webAPI) requestVersionInfo(
 func (web *webAPI) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	l := web.logger
-
 	aghhttp.ErrorAndLog(
 		ctx,
 		l,
@@ -98,10 +90,21 @@ func (web *webAPI) handleUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 // versionResponse is the response for /control/version.json endpoint.
+type VersionInfo struct {
+	NewVersion      string          `json:"new_version,omitempty"`
+	Announcement    string          `json:"announcement,omitempty"`
+	AnnouncementURL string          `json:"announcement_url,omitempty"`
+	CanAutoUpdate   aghalg.NullBool `json:"can_autoupdate,omitempty"`
+}
+
 type versionResponse struct {
 	VersionInfo
 	Disabled bool `json:"disabled"`
 }
+
+// maxPrivilegedPort is the maximum port number.  This only applies to Unix, as
+// on Windows, [aghnet.CanBindPrivilegedPorts] always returns `true`, `nil`.
+const maxPrivilegedPort = 1024
 
 // setAllowedToAutoUpdate sets CanAutoUpdate to true if ADBlock-Private-DNS is actually
 // allowed to perform an automatic update by the OS.  l and tlsMgr must not be
@@ -116,9 +119,9 @@ func (vr *versionResponse) setAllowedToAutoUpdate(
 	}
 
 	canUpdate := true
-	if tlsConfUsesPrivilegedPorts(tlsMgr.config()) ||
-		config.HTTPConfig.Address.Port() < 1024 ||
-		config.DNS.Port < 1024 {
+	if tlsConfUsesPrivilegedPorts(tlsMgr.extendedTLSConfig()) ||
+		config.HTTPConfig.Address.Port() < maxPrivilegedPort ||
+		config.DNS.Port < maxPrivilegedPort {
 		canUpdate, err = aghnet.CanBindPrivilegedPorts(ctx, l)
 		if err != nil {
 			return fmt.Errorf("checking ability to bind privileged ports: %w", err)
@@ -131,7 +134,11 @@ func (vr *versionResponse) setAllowedToAutoUpdate(
 }
 
 // tlsConfUsesPrivilegedPorts returns true if the provided TLS configuration
-// indicates that privileged ports are used.
+// indicates that privileged ports are used.  c must be valid
 func tlsConfUsesPrivilegedPorts(c *tlsConfigSettings) (ok bool) {
-	return c.Enabled && (c.PortHTTPS < 1024 || c.PortDNSOverTLS < 1024 || c.PortDNSOverQUIC < 1024)
+	return c.Enabled && (c.PortHTTPS < maxPrivilegedPort ||
+		c.PortDNSOverTLS < maxPrivilegedPort ||
+		c.PortDNSOverQUIC < maxPrivilegedPort)
 }
+
+

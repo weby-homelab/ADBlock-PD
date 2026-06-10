@@ -78,10 +78,10 @@ type logSettings struct {
 
 // osConfig contains OS-related configuration.
 type osConfig struct {
-	// Group is the name of the group which ADBlock-Private-DNS must switch to on
+	// Group is the name of the group which AdGuard Home must switch to on
 	// startup.  Empty string means no switching.
 	Group string `yaml:"group"`
-	// User is the name of the user which ADBlock-Private-DNS must switch to on
+	// User is the name of the user which AdGuard Home must switch to on
 	// startup.  Empty string means no switching.
 	User string `yaml:"user"`
 	// RlimitNoFile is the maximum number of opened fd's per process.  Zero
@@ -446,8 +446,8 @@ type statsConfig struct {
 
 // Default block host constants.
 const (
-	defaultSafeBrowsingBlockHost = "standard-block.dns.weby.local"
-	defaultParentalBlockHost     = "family-block.dns.weby.local"
+	defaultSafeBrowsingBlockHost = "standard-block.dns.adguard.com"
+	defaultParentalBlockHost     = "family-block.dns.adguard.com"
 )
 
 // config is the global configuration structure.
@@ -494,6 +494,7 @@ var config = &configuration{
 			CacheSize:                4 * 1024 * 1024,
 			CacheOptimisticAnswerTTL: timeutil.Duration(30 * time.Second),
 			CacheOptimisticMaxAge:    timeutil.Duration(12 * time.Hour),
+			EnableDNSSEC:             true,
 
 			EDNSClientSubnet: &dnsforward.EDNSClientSubnet{
 				CustomIP:  netip.Addr{},
@@ -883,8 +884,8 @@ func (c *configuration) write(
 	}
 
 	if tlsMgr != nil {
-		tlsConf := tlsMgr.config()
-		config.TLS = *tlsConf
+		extTLSConf := tlsMgr.extendedTLSConfig()
+		config.TLS = *extTLSConf
 	}
 
 	if globalContext.stats != nil {

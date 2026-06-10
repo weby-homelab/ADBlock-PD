@@ -2,6 +2,8 @@ package aghtest
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"net/http"
 	"net/netip"
 	"time"
@@ -9,6 +11,7 @@ import (
 	"github.com/weby-homelab/adblock-pd/internal/agh"
 	"github.com/weby-homelab/adblock-pd/internal/aghhttp"
 	"github.com/weby-homelab/adblock-pd/internal/aghos"
+	"github.com/weby-homelab/adblock-pd/internal/aghtls"
 	nextagh "github.com/weby-homelab/adblock-pd/internal/next/agh"
 	"github.com/weby-homelab/adblock-pd/internal/rdns"
 	"github.com/weby-homelab/adblock-pd/internal/whois"
@@ -197,4 +200,27 @@ var _ aghhttp.Registrar = (*Registrar)(nil)
 // Register implements the [aghhttp.Registrar] interface for *Registrar.
 func (m *Registrar) Register(method, path string, h http.HandlerFunc) {
 	m.OnRegister(method, path, h)
+}
+
+// TLSConfigProvider is a fake [aghtls.TLSConfigProvider] implementation for
+// tests.
+// TODO(m.kazantsev):  Use in tests.
+type TLSConfigProvider struct {
+	OnTLSConfig func() (conf *tls.Config)
+	OnRootCAs   func() (cert *x509.CertPool)
+}
+
+// type check
+var _ aghtls.TLSConfigProvider = (*TLSConfigProvider)(nil)
+
+// TLSConfig implements the [aghtls.TLSConfigProvider] interface for
+// *TLSConfigProvider.
+func (t *TLSConfigProvider) TLSConfig() (conf *tls.Config) {
+	return t.OnTLSConfig()
+}
+
+// RootCAs implements the [aghtls.TLSConfigProvider] interface for
+// *TLSConfigProvider.
+func (t *TLSConfigProvider) RootCAs() (pool *x509.CertPool) {
+	return t.OnRootCAs()
 }

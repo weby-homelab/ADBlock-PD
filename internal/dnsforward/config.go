@@ -32,7 +32,7 @@ import (
 	"github.com/ameshkov/dnscrypt/v2"
 )
 
-// Config represents the DNS filtering configuration of ADBlock-Private-DNS.  The zero
+// Config represents the DNS filtering configuration of AdGuard Home.  The zero
 // Config is empty and ready for use.
 type Config struct {
 	// Callbacks for other modules
@@ -140,7 +140,8 @@ type Config struct {
 	// requests.
 	AAAADisabled bool `yaml:"aaaa_disabled"`
 
-	// EnableDNSSEC, if true, set AD flag in outcoming DNS request.
+	// EnableDNSSEC defines whether the proxy should set the AD/DO bits in the
+	// upstream requests.
 	EnableDNSSEC bool `yaml:"enable_dnssec"`
 
 	// EDNSClientSubnet is the settings list for EDNS Client Subnet.
@@ -153,7 +154,7 @@ type Config struct {
 	// HandleDDR, if true, handle DDR requests
 	HandleDDR bool `yaml:"handle_ddr"`
 
-	// IpsetList is the ipset configuration that allows ADBlock-Private-DNS to add IP
+	// IpsetList is the ipset configuration that allows AdGuard Home to add IP
 	// addresses of the specified domain names to an ipset list.  Syntax:
 	//
 	//	DOMAIN[,DOMAIN].../IPSET_NAME[,IPSET_NAME]...
@@ -202,7 +203,7 @@ type TLSConfig struct {
 	// item in the list must be non-nil if Cert is not nil.
 	QUICListenAddrs []*net.UDPAddr
 
-	// HTTPSListenAddrs should be the addresses ADBlock-Private-DNS is listening on for
+	// HTTPSListenAddrs should be the addresses AdGuard Home is listening on for
 	// DoH connections.  These addresses are announced with DDR.  Each item in
 	// the list must be non-nil.
 	HTTPSListenAddrs []netip.AddrPort
@@ -543,7 +544,12 @@ func (conf *ServerConfig) loadUpstreams(
 
 	upstreams = stringutil.SplitTrimmed(string(data), "\n")
 
-	l.DebugContext(ctx, "got upstreams", "number", len(upstreams), "filename", conf.UpstreamDNSFileName)
+	l.DebugContext(
+		ctx,
+		"got upstreams",
+		"number", len(upstreams),
+		"filename", conf.UpstreamDNSFileName,
+	)
 
 	return stringutil.FilterOut(upstreams, aghnet.IsCommentOrEmpty), nil
 }
@@ -651,7 +657,10 @@ func filterOutAddrs(upsConf *proxy.UpstreamConfig, set addrPortSet) (err error) 
 
 // ourAddrsSet returns an addrPortSet that contains all the configured listening
 // addresses.  l must not be nil.
-func (conf *ServerConfig) ourAddrsSet(ctx context.Context, l *slog.Logger) (m addrPortSet, err error) {
+func (conf *ServerConfig) ourAddrsSet(
+	ctx context.Context,
+	l *slog.Logger,
+) (m addrPortSet, err error) {
 	addrs, unspecPorts := conf.collectDNSAddrs()
 	switch {
 	case addrs.Len() == 0:
@@ -780,8 +789,9 @@ func anyNameMatches(dnsNames []string, sni string) (ok bool) {
 	return false
 }
 
-// Called by 'tls' package when Client Hello is received
-// If the server name (from SNI) supplied by client is incorrect - we terminate the ongoing TLS handshake.
+// onGetCertificate is called by [tls] package when Client Hello is received. If
+// the server name (from SNI) supplied by client is incorrect - we terminate the
+// ongoing TLS handshake.
 func (s *Server) onGetCertificate(ch *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	if s.conf.TLSConf.StrictSNICheck && !anyNameMatches(s.dnsNames, ch.ServerName) {
 		// TODO(s.chzhen):  Pass context.
@@ -797,8 +807,8 @@ func (s *Server) onGetCertificate(ch *tls.ClientHelloInfo) (*tls.Certificate, er
 	return s.conf.TLSConf.Cert, nil
 }
 
-// preparePlain prepares the plain-DNS configuration for the DNS proxy.
-// preparePlain assumes that prepareTLS has already been called.
+// preparePlain prepares the plain-DNS configuration for the DNS proxy. The
+// method assumes that prepareTLS has already been called.
 func (s *Server) preparePlain(ctx context.Context, proxyConf *proxy.Config) (err error) {
 	if s.conf.ServePlainDNS {
 		proxyConf.UDPListenAddr = s.conf.UDPListenAddrs

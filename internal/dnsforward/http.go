@@ -227,7 +227,7 @@ func (s *Server) getDNSConfig(ctx context.Context) (c *jsonDNSConfig) {
 }
 
 // defaultLocalPTRUpstreams returns the list of default local PTR resolvers
-// filtered of ADBlock-Private-DNS's own DNS server addresses.  It may appear empty.
+// filtered of AdGuard Home's own DNS server addresses.  It may appear empty.
 func (s *Server) defaultLocalPTRUpstreams(ctx context.Context) (ups []string, err error) {
 	matcher, err := s.conf.ourAddrsSet(ctx, s.logger)
 	if err != nil {
