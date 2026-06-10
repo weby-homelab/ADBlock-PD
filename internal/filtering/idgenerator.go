@@ -11,7 +11,7 @@ import (
 )
 
 // idGenerator generates filtering-list IDs in a way broadly compatible with the
-// legacy approach of ADBlock-Private-DNS.
+// legacy approach of AdGuard Home.
 //
 // TODO(a.garipov): Get rid of this once we switch completely to the new
 // rule-list architecture.

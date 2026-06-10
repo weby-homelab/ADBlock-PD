@@ -57,6 +57,10 @@ type authConfig struct {
 	// mux is the server's multiplexer.  It must not be nil.
 	mux *http.ServeMux
 
+	// gliNetTokenRoot is the root where GLiNet tokens are stored.  It must not
+	// be nil if isGLiNet is true.
+	gliNetTokenRoot *os.Root
+
 	// rateLimiter manages the rate limiting for login attempts.  It must not be
 	// nil.
 	rateLimiter loginRateLimiter
@@ -77,10 +81,6 @@ type authConfig struct {
 	// sessionTTL is the TTL (Time To Live) for web user sessions.
 	sessionTTL time.Duration
 
-	// gliNetTokenRoot is the root where GLiNet tokens are stored.  It must not
-	// be nil if isGLiNet is true.
-	gliNetTokenRoot *os.Root
-
 	// isGLiNet indicates whether GLiNet mode is enabled.
 	isGLiNet bool
 }
@@ -92,6 +92,10 @@ type auth struct {
 
 	// mux is the server's multiplexer.
 	mux *http.ServeMux
+
+	// gliNetTokenRoot is the root where GLiNet tokens are stored.  It must not
+	// be nil if isGLiNet is true.
+	gliNetTokenRoot *os.Root
 
 	// rateLimiter manages rate limiting for login attempts.
 	rateLimiter loginRateLimiter
@@ -107,10 +111,6 @@ type auth struct {
 
 	// doHRoutes is a list of DoH routes for public access.
 	doHRoutes []string
-
-	// gliNetTokenRoot is the root where GLiNet tokens are stored.  It must not
-	// be nil if isGLiNet is true.
-	gliNetTokenRoot *os.Root
 
 	// isGLiNet indicates whether GLiNet mode is enabled.
 	isGLiNet bool
@@ -146,10 +146,10 @@ func newAuth(ctx context.Context, conf *authConfig) (a *auth, err error) {
 		mux:             conf.mux,
 		rateLimiter:     conf.rateLimiter,
 		trustedProxies:  conf.trustedProxies,
+		gliNetTokenRoot: conf.gliNetTokenRoot,
 		sessions:        s,
 		users:           userDB,
 		doHRoutes:       conf.doHRoutes,
-		gliNetTokenRoot: conf.gliNetTokenRoot,
 		isGLiNet:        conf.isGLiNet,
 		isUserless:      len(conf.users) == 0,
 	}, nil

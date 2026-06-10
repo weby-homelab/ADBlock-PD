@@ -1,4 +1,4 @@
-// Package dhcpsvc contains the ADBlock-Private-DNS DHCP service.
+// Package dhcpsvc contains the AdGuard Home DHCP service.
 //
 // TODO(e.burkov): Add tests.
 package dhcpsvc

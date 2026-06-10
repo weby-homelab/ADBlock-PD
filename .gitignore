@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+client/node_modules/
+build/static/
+
+# Compiled binaries
+adblock-pd
+ADBlock-PD
+adblock-pd-build/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
