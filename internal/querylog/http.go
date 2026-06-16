@@ -450,11 +450,17 @@ func (l *queryLog) parseSearchParams(
 
 	var limit64 int64
 	if limit64, err = strconv.ParseInt(q.Get("limit"), 10, 64); err == nil {
+		if limit64 < 0 || limit64 > 1000000 {
+			return nil, fmt.Errorf("invalid limit: %d", limit64)
+		}
 		p.limit = int(limit64)
 	}
 
 	var offset64 int64
 	if offset64, err = strconv.ParseInt(q.Get("offset"), 10, 64); err == nil {
+		if offset64 < 0 || offset64 > 100000000 {
+			return nil, fmt.Errorf("invalid offset: %d", offset64)
+		}
 		p.offset = int(offset64)
 
 		// If we don't use "olderThan" and use offset/limit instead, we should change the default behavior

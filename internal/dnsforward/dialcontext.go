@@ -36,6 +36,9 @@ func (s *Server) DialContext(ctx context.Context, network, addr string) (conn ne
 	if err != nil {
 		return nil, fmt.Errorf("invalid port %s: %w", portStr, err)
 	}
+	if port < 0 || port > 65535 {
+		return nil, fmt.Errorf("invalid port %d: out of range", port)
+	}
 
 	ips, err := s.Resolve(ctx, network, host)
 	if err != nil {
