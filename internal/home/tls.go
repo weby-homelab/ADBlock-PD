@@ -370,6 +370,9 @@ func loadCertificateChainData(extTLSConf *tlsConfigSettings) (err error) {
 		}
 
 		cleanPath := filepath.Clean(extTLSConf.CertificatePath)
+		if strings.Contains(cleanPath, "..") {
+			return errors.Error("path traversal: path must not contain '..'")
+		}
 		extTLSConf.CertificateChainData, err = os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("reading cert file: %w", err)
@@ -391,6 +394,9 @@ func loadPrivateKeyData(extTLSConf *tlsConfigSettings) (err error) {
 		}
 
 		cleanPath := filepath.Clean(extTLSConf.PrivateKeyPath)
+		if strings.Contains(cleanPath, "..") {
+			return errors.Error("path traversal: path must not contain '..'")
+		}
 		extTLSConf.PrivateKeyData, err = os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("reading key file: %w", err)
