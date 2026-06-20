@@ -33,10 +33,10 @@ require (
 	go.etcd.io/bbolt v1.4.3
 	// TODO(e.burkov): Update to a stable tag.
 	go.yaml.in/yaml/v4 v4.0.0-rc.4.0.20260405193028-802e24f4fbcc
-	golang.org/x/crypto v0.51.0
+	golang.org/x/crypto v0.53.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	golang.org/x/net v0.55.0
-	golang.org/x/sys v0.45.0
+	golang.org/x/net v0.56.0
+	golang.org/x/sys v0.46.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	howett.net/plist v1.0.1
 )
@@ -55,10 +55,10 @@ require (
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701 // indirect
-	golang.org/x/mod v0.35.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
-	golang.org/x/tools v0.44.0 // indirect
+	golang.org/x/mod v0.36.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/tools v0.45.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
