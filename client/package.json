@@ -56,7 +56,7 @@
     "yaml": "2.8.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.5",
+    "@babel/core": "^7.29.6",
     "@babel/plugin-transform-class-properties": "^7.24.1",
     "@babel/plugin-transform-nullish-coalescing-operator": "^7.24.1",
     "@babel/plugin-transform-object-rest-spread": "^7.24.5",
