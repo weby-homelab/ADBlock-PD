@@ -13,9 +13,9 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/weby-homelab/adblock-pd/master/logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/weby-homelab/adblock-pd/master/logo-light.svg">
-    <img alt="Логотип ADBlock-PD" src="https://raw.githubusercontent.com/weby-homelab/adblock-pd/master/logo-light.svg" width="400">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Weby-Homelab/ADBlock-PD/master/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Weby-Homelab/ADBlock-PD/master/logo-light.svg">
+    <img alt="Логотип ADBlock-PD" src="https://raw.githubusercontent.com/Weby-Homelab/ADBlock-PD/master/logo-light.svg" width="400">
   </picture>
 </p>
 
@@ -25,8 +25,8 @@
 
 <p align="center">
   <a href="https://hub.docker.com/r/webyhomelab/adblock-pd"><img src="https://img.shields.io/docker/pulls/webyhomelab/adblock-pd?style=for-the-badge&logo=docker&color=00d4ff" alt="Завантаження з Docker"></a>
-  <a href="https://github.com/weby-homelab/adblock-pd/releases/latest"><img src="https://img.shields.io/github/v/release/weby-homelab/adblock-pd?style=for-the-badge&logo=github&color=0072ff" alt="Останній реліз"></a>
-  <a href="https://github.com/weby-homelab/adblock-pd/blob/master/LICENSE.txt"><img src="https://img.shields.io/badge/Ліцензія-GPL_v3-blue.svg?style=for-the-badge" alt="Ліцензія"></a>
+  <a href="https://github.com/Weby-Homelab/ADBlock-PD/releases/latest"><img src="https://img.shields.io/github/v/release/Weby-Homelab/ADBlock-PD?style=for-the-badge&logo=github&color=0072ff" alt="Останній реліз"></a>
+  <a href="https://github.com/Weby-Homelab/ADBlock-PD/blob/master/LICENSE.txt"><img src="https://img.shields.io/badge/Ліцензія-GPL_v3-blue.svg?style=for-the-badge" alt="Ліцензія"></a>
 </p>
 
 ---
@@ -156,7 +156,7 @@ flowchart TD
 Якщо ви хочете зібрати проєкт самостійно, вам знадобиться Docker (використовується багатоетапне збирання). 
 
 ```bash
-git clone https://github.com/weby-homelab/adblock-pd.git
+git clone https://github.com/Weby-Homelab/ADBlock-PD.git
 cd adblock-pd
 docker build -t adblock-pd:local .
 ```
