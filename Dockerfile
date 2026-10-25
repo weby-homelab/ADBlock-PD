@@ -8,8 +8,7 @@ COPY client/ ./
 RUN npm run build-prod
 
 # Stage 2: Build the backend
-FROM golang:1.24-bullseye AS backend-builder
-ENV GOTOOLCHAIN=go1.26.8
+FROM golang:alpine AS backend-builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -22,18 +21,16 @@ COPY --from=frontend-builder /app/build ./build
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o ADBlock-PD main.go
 
 # Stage 3: Final image
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends \
+FROM alpine:3.23
+RUN apk --no-cache add \
     ca-certificates \
-    tzdata \
-    bind9-host \
-    && rm -rf /var/lib/apt/lists/*
+    tzdata
 
 # Set timezone
 ENV TZ=Europe/Kyiv
 
 # Create a non-privileged user
-RUN useradd -u 10001 dnsuser
+RUN adduser -D -u 10001 dnsuser
 WORKDIR /opt/adblock-pd
 RUN mkdir -p data conf && chown -R dnsuser:dnsuser /opt/adblock-pd
 USER dnsuser
@@ -51,7 +48,7 @@ EXPOSE 853/tcp 853/udp
 EXPOSE 443/tcp 443/udp
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD host -W 2 google.com 127.0.0.1 || exit 1
+  CMD nslookup google.com 127.0.0.1 >/dev/null || exit 1
 
 ENTRYPOINT ["./ADBlock-PD", "--work-dir", "/opt/adblock-pd/data", "--config", "/opt/adblock-pd/conf/ADBlock-PD.yaml", "--no-permcheck"]
 
