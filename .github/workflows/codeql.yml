@@ -28,7 +28,7 @@ jobs:
       if: matrix.language == 'go'
       uses: actions/setup-go@v5
       with:
-        go-version: '1.26.6'
+        go-version: '1.26.8'
 
     - name: Set up Node.js
       if: matrix.language == 'javascript-typescript'
@@ -51,7 +51,7 @@ jobs:
     - name: Build Backend (Go)
       if: matrix.language == 'go'
       env:
-        GOTOOLCHAIN: go1.26.6
+        GOTOOLCHAIN: go1.26.8
       run: |
         go mod tidy
         go build -v ./...

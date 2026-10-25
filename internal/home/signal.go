@@ -94,6 +94,8 @@ func (h *signalHandler) handle(ctx context.Context) {
 			h.reloadConfig(ctx)
 		default:
 			h.shutdown(ctx)
+
+			return
 		}
 	}
 }
