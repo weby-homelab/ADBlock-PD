@@ -23,6 +23,8 @@ const configSyslog = "syslog"
 // ls must not be nil.
 func newSlogLogger(ls *logSettings) (l *slog.Logger) {
 	if !ls.Enabled {
+		log.SetLevel(log.OFF)
+
 		return slogutil.NewDiscardLogger()
 	}
 

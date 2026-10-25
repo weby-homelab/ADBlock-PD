@@ -1,9 +1,9 @@
 module github.com/weby-homelab/adblock-pd
 
-go 1.26.6
+go 1.26.8
 
 require (
-	github.com/AdguardTeam/dnscrypt v0.0.2
+	github.com/AdguardTeam/dnscrypt v0.0.3
 	github.com/AdguardTeam/golibs v0.35.15
 	github.com/AdguardTeam/urlfilter v0.23.4
 	github.com/NYTimes/gziphandler v1.1.1
