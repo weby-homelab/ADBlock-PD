@@ -149,7 +149,7 @@
     "brace-expansion": "^2.1.7",
     "websocket-driver": "^0.7.5",
     "browserslist": "^4.28.8",
-    "qs": "^6.16.0",
+    "qs": "^6.17.1",
     "body-parser": "^1.20.9"
   }
 }
